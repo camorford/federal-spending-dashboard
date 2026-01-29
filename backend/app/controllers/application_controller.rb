@@ -14,7 +14,7 @@ class ApplicationController < ActionController::API
       current_page: pagy.page,
       total_pages: pagy.pages,
       total_count: pagy.count,
-      per_page: pagy.limit
+      per_page: pagy.items
     }
   end
 end
