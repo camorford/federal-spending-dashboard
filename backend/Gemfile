@@ -1,0 +1,47 @@
+source "https://rubygems.org"
+
+ruby "3.2.2"
+
+gem "rails", "~> 8.0"
+gem "pg", "~> 1.5"
+gem "puma", "~> 6.4"
+
+# Background jobs
+gem "sidekiq", "~> 7.2"
+gem "sidekiq-scheduler", "~> 5.0"
+
+# Elasticsearch
+gem "elasticsearch", "~> 8.11"
+gem "searchkick", "~> 5.3"
+
+# API
+gem "rack-cors"
+gem "jbuilder"
+gem "pagy", "~> 6.2"
+
+# HTTP client for USAspending API
+gem "faraday", "~> 2.7"
+gem "faraday-retry", "~> 2.2"
+
+# Environment variables
+gem "dotenv-rails", groups: [:development, :test]
+
+# Reduces boot times through caching
+gem "bootsnap", require: false
+
+group :development, :test do
+  gem "debug", platforms: %i[mri windows]
+  gem "rspec-rails", "~> 6.1"
+  gem "factory_bot_rails", "~> 6.4"
+  gem "faker", "~> 3.2"
+end
+
+group :development do
+  gem "annotate"
+end
+
+group :test do
+  gem "shoulda-matchers", "~> 5.3"
+  gem "webmock", "~> 3.19"
+  gem "vcr", "~> 6.2"
+end
