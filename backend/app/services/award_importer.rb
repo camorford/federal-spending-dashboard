@@ -1,19 +1,27 @@
 class AwardImporter
-  def initialize
+  AWARD_TYPE_CODES = {
+    'contracts' => %w[A B C D],
+    'grants' => %w[02 03 04 05],
+    'loans' => %w[07 08],
+    'direct_payments' => %w[06 10]
+  }.freeze
+
+  def initialize(award_type: 'contracts')
     @client = UsaspendingClient.new
+    @award_type = award_type
+    @type_codes = AWARD_TYPE_CODES[award_type] || AWARD_TYPE_CODES['contracts']
   end
 
-  def import(pages: 5)
-    return if SyncLog.currently_running?
-
-    sync_log = SyncLog.create!(sync_type: 'incremental', status: 'pending')
-    sync_log.start!
-
+  def import(pages: 5, sync_log: nil)
     total_records = 0
 
     begin
       pages.times do |page_num|
-        response = @client.search_awards(page: page_num + 1, limit: 100)
+        response = @client.search_awards(
+          page: page_num + 1,
+          limit: 100,
+          filters: build_filters
+        )
         results = response['results'] || []
 
         break if results.empty?
@@ -23,20 +31,33 @@ class AwardImporter
           total_records += 1
         end
 
+        sync_log&.update(records_processed: total_records)
         Rails.logger.info "Imported page #{page_num + 1}, total records: #{total_records}"
       end
 
-      sync_log.complete!(total_records)
+      sync_log&.complete!(total_records)
       Rails.logger.info "Import complete: #{total_records} records"
 
     rescue => e
-      sync_log.fail!(e.message)
+      sync_log&.fail!(e.message)
       Rails.logger.error "Import failed: #{e.message}"
       raise
     end
   end
 
   private
+
+  def build_filters
+    {
+      time_period: [
+        {
+          start_date: 1.year.ago.to_date.to_s,
+          end_date: Date.today.to_s
+        }
+      ],
+      award_type_codes: @type_codes
+    }
+  end
 
   def import_award(data)
     usaspending_id = data['Award ID']
@@ -48,7 +69,7 @@ class AwardImporter
     Award.find_or_initialize_by(usaspending_id: usaspending_id).tap do |award|
       award.agency = agency
       award.recipient = recipient
-      award.award_type = map_award_type(data['Contract Award Type'])
+      award.award_type = map_award_type(data['Contract Award Type'] || @award_type)
       award.amount = parse_amount(data['Award Amount'])
       award.description = data['Description']
       award.awarded_on = parse_date(data['Start Date'])
@@ -73,10 +94,10 @@ class AwardImporter
 
   def map_award_type(type)
     case type&.downcase
-    when /contract/ then 'contract'
-    when /grant/ then 'grant'
-    when /loan/ then 'loan'
-    when /direct payment/ then 'direct_payment'
+    when /contract/, 'contracts' then 'contract'
+    when /grant/, 'grants' then 'grant'
+    when /loan/, 'loans' then 'loan'
+    when /direct payment/, 'direct_payments' then 'direct_payment'
     else 'other'
     end
   end
