@@ -5,6 +5,7 @@ Rails.application.routes.draw do
       resources :agencies, only: [:index, :show]
       resources :recipients, only: [:index, :show]
 
+      get 'search/autocomplete', to: 'search#autocomplete'
       get 'search', to: 'search#index'
 
       get 'stats/overview', to: 'stats#overview'

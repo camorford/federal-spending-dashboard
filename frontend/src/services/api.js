@@ -63,6 +63,10 @@ class ApiService {
   async search(query, params = {}) {
     return this.get('/search', { q: query, ...params })
   }
+
+  async autocomplete(query) {
+    return this.get('/search/autocomplete', { q: query })
+  }
 }
 
 export const api = new ApiService()
