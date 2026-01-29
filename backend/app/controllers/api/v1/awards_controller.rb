@@ -1,8 +1,9 @@
 module Api
   module V1
     class AwardsController < ApplicationController
+
       def index
-        awards = Award.includes(:agency, :recipient).recent
+        awards = Award.includes(:agency, :recipient)
 
         awards = awards.by_agency(params[:agency_id]) if params[:agency_id].present?
         awards = awards.by_type(params[:award_type]) if params[:award_type].present?
@@ -19,6 +20,24 @@ module Api
         if params[:max_amount].present?
           awards = awards.where('amount <= ?', params[:max_amount])
         end
+
+        sort_column = params[:sort] || 'awarded_on'
+        sort_direction = params[:direction] == 'asc' ? 'asc' : 'desc'
+
+        awards = case sort_column
+                 when 'agency'
+                   awards.left_joins(:agency).order(Arel.sql("agencies.name #{sort_direction}"))
+                 when 'recipient'
+                   awards.left_joins(:recipient).order(Arel.sql("recipients.name #{sort_direction}"))
+                 when 'amount'
+                   awards.order(amount: sort_direction.to_sym)
+                 when 'awarded_on', 'date'
+                   awards.order(awarded_on: sort_direction.to_sym)
+                 when 'award_type', 'type'
+                   awards.order(award_type: sort_direction.to_sym)
+                 else
+                   awards.order(awarded_on: :desc)
+                 end
 
         @pagy, @awards = pagy(awards, limit: params[:per_page] || 25)
 

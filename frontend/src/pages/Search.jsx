@@ -60,7 +60,19 @@ function Search() {
   function handleSuggestionClick(suggestion) {
     setQuery(suggestion)
     setShowSuggestions(false)
-    setTimeout(() => handleSearch(), 0)
+    // Search with the suggestion directly
+    setTimeout(async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        const data = await api.search(suggestion)
+        setResults(data)
+      } catch (err) {
+        setError(err.message)
+      } finally {
+        setLoading(false)
+      }
+    }, 0)
   }
 
   return (
