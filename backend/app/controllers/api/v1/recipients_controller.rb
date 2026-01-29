@@ -1,25 +1,45 @@
 module Api
   module V1
     class RecipientsController < ApplicationController
+
       def index
-        @recipients = Recipient.order(:name)
+        @recipients = Recipient.all
 
         @recipients = @recipients.by_state(params[:state]) if params[:state].present?
         @recipients = @recipients.by_type(params[:type]) if params[:type].present?
 
         if params[:with_stats]
           @recipients = @recipients.left_joins(:awards)
-                                   .select('recipients.*, COUNT(awards.id) as awards_count, COALESCE(SUM(awards.amount), 0) as total_received')
-                                   .group('recipients.id')
-                                   .order('total_received DESC')
+                                  .select('recipients.*, COUNT(awards.id) as awards_count, COALESCE(SUM(awards.amount), 0) as total_received')
+                                  .group('recipients.id')
+                                  .reorder('total_received DESC')
+          
+          # not sure why pagy isnt working, need to come back to this. quick workaround 
+
+          total = @recipients.length
+          page = (params[:page] || 1).to_i
+          per_page = (params[:per_page] || 25).to_i
+          offset = (page - 1) * per_page
+          
+          paginated = @recipients.offset(offset).limit(per_page)
+          
+          render json: {
+            recipients: paginated,
+            meta: {
+              current_page: page,
+              total_pages: (total.to_f / per_page).ceil,
+              total_count: total,
+              per_page: per_page
+            }
+          }
+        else
+          @pagy, @recipients = pagy(@recipients.order(:name), limit: params[:per_page] || 25)
+
+          render json: {
+            recipients: @recipients,
+            meta: pagination_meta(@pagy)
+          }
         end
-
-        @pagy, @recipients = pagy(@recipients, limit: params[:per_page] || 25)
-
-        render json: {
-          recipients: @recipients,
-          meta: pagination_meta(@pagy)
-        }
       end
 
       def show

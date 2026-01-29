@@ -50,9 +50,11 @@ module Api
       end
 
       def spending_over_time_for_agency(agency)
+        date_trunc = Arel.sql("DATE_TRUNC('month', awarded_on)")
+        
         agency.awards
-              .group("DATE_TRUNC('month', awarded_on)")
-              .order("DATE_TRUNC('month', awarded_on)")
+              .group(date_trunc)
+              .order(date_trunc)
               .sum(:amount)
               .transform_keys { |k| k.strftime('%Y-%m') }
       end

@@ -54,7 +54,8 @@ class UsaspendingClient
       'Contract Award Type',
       'recipient_id',
       'Place of Performance State Code',
-      'Description'
+      'Description',
+      'Last Modified Date'
     ]
   end
 end

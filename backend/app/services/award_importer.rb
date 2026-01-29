@@ -72,7 +72,7 @@ class AwardImporter
       award.award_type = map_award_type(data['Contract Award Type'] || @award_type)
       award.amount = parse_amount(data['Award Amount'])
       award.description = data['Description']
-      award.awarded_on = parse_date(data['Start Date'])
+      award.awarded_on = parse_date(data['Last Modified Date']) || parse_date(data['Start Date'])
       award.place_of_performance_state = data['Place of Performance State Code']
       award.save!
     end

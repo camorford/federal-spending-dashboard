@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { ChevronUp, ChevronDown } from 'lucide-react'
 import api from '../services/api'
 import LoadingSpinner from '../components/LoadingSpinner'
 
@@ -10,6 +11,25 @@ function formatCurrency(value) {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(value)
+}
+
+function SortHeader({ label, field, currentSort, currentDirection, onSort }) {
+  const isActive = currentSort === field
+  
+  return (
+    <th
+      onClick={() => onSort(field)}
+      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
+    >
+      <div className="flex items-center gap-1">
+        {label}
+        <span className="flex flex-col">
+          <ChevronUp className={`w-3 h-3 -mb-1 ${isActive && currentDirection === 'asc' ? 'text-blue-600' : 'text-gray-300'}`} />
+          <ChevronDown className={`w-3 h-3 ${isActive && currentDirection === 'desc' ? 'text-blue-600' : 'text-gray-300'}`} />
+        </span>
+      </div>
+    </th>
+  )
 }
 
 function Awards() {
@@ -24,6 +44,8 @@ function Awards() {
     agency_id: searchParams.get('agency_id') || '',
     award_type: searchParams.get('award_type') || '',
     state: searchParams.get('state') || '',
+    sort: searchParams.get('sort') || 'awarded_on',
+    direction: searchParams.get('direction') || 'desc',
     page: searchParams.get('page') || 1
   }
 
@@ -57,6 +79,21 @@ function Awards() {
       newParams.set(key, value)
     } else {
       newParams.delete(key)
+    }
+    newParams.set('page', '1')
+    setSearchParams(newParams)
+  }
+
+  function handleSort(field) {
+    const newParams = new URLSearchParams(searchParams)
+    const currentSort = searchParams.get('sort')
+    const currentDirection = searchParams.get('direction') || 'desc'
+    
+    if (currentSort === field) {
+      newParams.set('direction', currentDirection === 'desc' ? 'asc' : 'desc')
+    } else {
+      newParams.set('sort', field)
+      newParams.set('direction', 'desc')
     }
     newParams.set('page', '1')
     setSearchParams(newParams)
@@ -141,21 +178,41 @@ function Awards() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Recipient
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Agency
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Type
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Amount
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Date
-                  </th>
+                  <SortHeader
+                    label="Recipient"
+                    field="recipient"
+                    currentSort={filters.sort}
+                    currentDirection={filters.direction}
+                    onSort={handleSort}
+                  />
+                  <SortHeader
+                    label="Agency"
+                    field="agency"
+                    currentSort={filters.sort}
+                    currentDirection={filters.direction}
+                    onSort={handleSort}
+                  />
+                  <SortHeader
+                    label="Type"
+                    field="award_type"
+                    currentSort={filters.sort}
+                    currentDirection={filters.direction}
+                    onSort={handleSort}
+                  />
+                  <SortHeader
+                    label="Amount"
+                    field="amount"
+                    currentSort={filters.sort}
+                    currentDirection={filters.direction}
+                    onSort={handleSort}
+                  />
+                  <SortHeader
+                    label="Date"
+                    field="awarded_on"
+                    currentSort={filters.sort}
+                    currentDirection={filters.direction}
+                    onSort={handleSort}
+                  />
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
