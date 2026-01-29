@@ -44,9 +44,9 @@ function Dashboard() {
         ])
 
         setOverview(overviewData)
-        setSpendingOverTime(timeData)
-        setSpendingByAgency(agencyData)
-        setSpendingByType(typeData)
+        setSpendingOverTime(timeData.map(d => ({ ...d, total: parseFloat(d.total) })))
+        setSpendingByAgency(agencyData.map(d => ({ ...d, total: parseFloat(d.total) })))
+        setSpendingByType(typeData.map(d => ({ ...d, total: parseFloat(d.total) })))
       } catch (err) {
         setError(err.message)
       } finally {
