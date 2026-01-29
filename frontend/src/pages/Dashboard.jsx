@@ -4,10 +4,11 @@ import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts'
-import { DollarSign, FileText, Building2, Users } from 'lucide-react'
+import { DollarSign, FileText, Building2, Users, Info } from 'lucide-react'
 import api from '../services/api'
 import StatCard from '../components/StatCard'
 import LoadingSpinner from '../components/LoadingSpinner'
+import SyncPanel from '../components/SyncPanel'
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16']
 
@@ -76,7 +77,17 @@ function Dashboard() {
           icon={DollarSign}
         />
         <StatCard
-          title="Total Awards"
+          title={
+            <span className="flex items-center gap-1">
+              Total Awards
+              <span className="relative group">
+                <Info className="w-4 h-4 text-gray-400 cursor-help" />
+                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                  Contracts, grants, loans, and direct payments
+                </span>
+              </span>
+            </span>
+          }
           value={(overview?.total_awards || 0).toLocaleString()}
           icon={FileText}
         />
@@ -165,6 +176,7 @@ function Dashboard() {
           </BarChart>
         </ResponsiveContainer>
       </div>
+      <SyncPanel />
     </div>
   )
 }

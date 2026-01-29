@@ -67,6 +67,23 @@ class ApiService {
   async autocomplete(query) {
     return this.get('/search/autocomplete', { q: query })
   }
+
+  async getSyncStatus() {
+  return this.get('/sync/status')
+}
+
+  async startSync(awardType = 'contracts', pages = 5) {
+    const response = await fetch(`${window.location.origin}/api/v1/sync/start`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ award_type: awardType, pages: pages })
+    })
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || `API error: ${response.status}`)
+    }
+    return response.json()
+  }
 }
 
 export const api = new ApiService()
