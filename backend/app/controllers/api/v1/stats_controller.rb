@@ -16,28 +16,17 @@ module Api
       def spending_over_time
         period = params[:period] || 'month'
 
-        data = case period
-               when 'day'
-                 Award.group("DATE_TRUNC('day', awarded_on)")
-                      .order("DATE_TRUNC('day', awarded_on)")
-               when 'week'
-                 Award.group("DATE_TRUNC('week', awarded_on)")
-                      .order("DATE_TRUNC('week', awarded_on)")
-               when 'year'
-                 Award.group("DATE_TRUNC('year', awarded_on)")
-                      .order("DATE_TRUNC('year', awarded_on)")
-               else
-                 Award.group("DATE_TRUNC('month', awarded_on)")
-                      .order("DATE_TRUNC('month', awarded_on)")
-               end
+        date_trunc = Arel.sql("DATE_TRUNC('#{period}', awarded_on)")
 
-        results = data.select("DATE_TRUNC('#{period}', awarded_on) as period, SUM(amount) as total, COUNT(*) as count")
+        results = Award.group(date_trunc)
+                      .order(date_trunc)
+                      .pluck(date_trunc, Arel.sql('SUM(amount)'), Arel.sql('COUNT(*)'))
 
         render json: results.map { |r|
           {
-            period: r.period.strftime(period_format(period)),
-            total: r.total,
-            count: r.count
+            period: r[0].strftime(period_format(period)),
+            total: r[1],
+            count: r[2]
           }
         }
       end
