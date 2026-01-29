@@ -1,116 +1,86 @@
 # Federal Spending Dashboard
 
-A full-stack application for exploring federal spending data from USAspending.gov. Built with Rails API and React.
+A full-stack application for exploring federal spending data from USAspending.gov.
+
+![Dashboard](docs/dashboard.png)
 
 ## Features
 
-- **Data Pipeline**: Automated ingestion from USAspending.gov API (coming soon)
-- **Search**: Full-text search with PostgreSQL (Elasticsearch upgrade planned)
-- **Analytics Dashboard**: Interactive visualizations of spending trends
-- **Filtering**: Filter by agency, recipient, state, date range, and award type
+- **Real-time Data Sync** - Pull latest contracts, grants, loans, and direct payments from USAspending.gov
+- **Full-text Search** - Elasticsearch-powered search with autocomplete
+- **Interactive Charts** - Spending over time, by agency, by type
+- **Sortable Tables** - Click column headers to sort
+- **Detail Pages** - Drill down into agencies and recipients
 
 ## Tech Stack
 
-**Backend**
-- Ruby on Rails 8 (API mode)
-- PostgreSQL
-- Sidekiq + Redis (background jobs)
+**Backend:** Ruby on Rails 8, PostgreSQL, Elasticsearch, Sidekiq
 
-**Frontend** (coming in Milestone 3)
-- React 18
-- Vite
-- Recharts
-- TailwindCSS
+**Frontend:** React 18, Vite, Recharts, Tailwind CSS
 
-## Architecture
-```
-┌─────────────────┐     ┌─────────────────┐
-│  React Frontend │────▶│   Rails API     │
-└─────────────────┘     └────────┬────────┘
-                                 │
-        ┌────────────────────────┼────────────────────────┐
-        │                        │                        │
-        ▼                        ▼                        ▼
-┌───────────────┐      ┌─────────────────┐      ┌─────────────────┐
-│  PostgreSQL   │      │     Redis       │      │ Elasticsearch   │
-│  (primary)    │      │   (Sidekiq)     │      │   (planned)     │
-└───────────────┘      └─────────────────┘      └─────────────────┘
-```
-
-## Local Development Setup
+## Quick Start
 
 ### Prerequisites
 
+- Docker Desktop
 - Ruby 3.2+
-- Rails 8
-- PostgreSQL
-- Node.js 18+ (for frontend)
+- Node.js 18+
 
-### Backend Setup
-```bash
-cd backend
-bundle install
-cp .env.example .env
-rails db:create db:migrate db:seed
-rails s
+### Setup
+
+Clone the repo and run the setup script:
+
+    git clone https://github.com/camorford/federal-spending-dashboard
+    cd federal-spending-dashboard
+    ./setup.sh
+
+### Run
+
+Start all services:
+
+    ./start.sh
+
+Open http://localhost:5173
+
+## Architecture
+```
+federal-spending-dashboard/
+├── backend/                # Rails API
+│   ├── app/
+│   │   ├── controllers/    # API endpoints
+│   │   ├── models/         # Award, Agency, Recipient, SyncLog
+│   │   └── services/       # USAspending API client, importer
+│   └── config/
+├── frontend/               # React app
+│   ├── src/
+│   │   ├── components/     # Layout, StatCard, SyncPanel
+│   │   ├── pages/          # Dashboard, Awards, Agencies, Recipients
+│   │   └── services/       # API client
+│   └── vite.config.js
+├── docker-compose.yml      # PostgreSQL, Redis, Elasticsearch
+├── setup.sh                # One-command setup
+└── start.sh                # One-command start
 ```
 
-API runs at http://localhost:3000
-
-### API Endpoints
+## API Endpoints
 
 | Endpoint | Description |
 |----------|-------------|
-| `GET /api/v1/awards` | List awards with filters |
-| `GET /api/v1/awards/:id` | Award details |
-| `GET /api/v1/agencies` | List all agencies |
+| `GET /api/v1/awards` | List awards (filterable, sortable) |
+| `GET /api/v1/agencies` | List agencies |
 | `GET /api/v1/agencies/:id` | Agency details with stats |
 | `GET /api/v1/recipients` | List recipients |
 | `GET /api/v1/recipients/:id` | Recipient details |
-| `GET /api/v1/search?q=query` | Full-text search |
-| `GET /api/v1/stats/overview` | Dashboard overview stats |
-| `GET /api/v1/stats/spending_over_time` | Time series data |
-| `GET /api/v1/stats/by_agency` | Spending by agency |
-| `GET /api/v1/stats/by_state` | Spending by state |
-| `GET /api/v1/stats/by_type` | Spending by award type |
-
-### Query Parameters
-
-**Awards endpoint filters:**
-- `agency_id` - Filter by agency
-- `award_type` - contract, grant, loan, direct_payment, other
-- `state` - Two-letter state code
-- `start_date` / `end_date` - Date range
-- `min_amount` / `max_amount` - Amount range
-- `page` / `per_page` - Pagination
+| `GET /api/v1/search?q=` | Full-text search |
+| `GET /api/v1/stats/overview` | Dashboard stats |
+| `POST /api/v1/sync/start` | Trigger data sync |
 
 ## Data Model
-```
-agencies
-├── name, code, description
 
-recipients
-├── name, recipient_type, city, state, country
-
-awards
-├── agency_id, recipient_id
-├── award_type, amount, description
-├── awarded_on, period_of_performance_start/end
-├── place_of_performance_state, usaspending_id
-
-sync_logs
-├── sync_type, status, started_at, completed_at
-├── records_processed, error_message, metadata
-```
-
-## Roadmap
-
-- [x] Milestone 1: Foundation (models, migrations, API endpoints)
-- [ ] Milestone 2: USAspending API integration
-- [ ] Milestone 3: React dashboard
-- [ ] Milestone 4: Elasticsearch integration
-- [ ] Milestone 5: Data visualizations
-- [ ] Milestone 6: Polish and deploy
+- **Agency** - Federal agencies (DOD, NASA, HHS, etc.)
+- **Recipient** - Organizations receiving funding
+- **Award** - Individual spending records (contracts, grants, loans, direct payments)
+- **SyncLog** - Tracks data import history
 
 ## License
 
